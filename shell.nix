@@ -10,5 +10,7 @@ pkgs.mkShell {
     ruff
 
     pre-commit
+
+    ollama
   ];
 }
