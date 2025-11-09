@@ -23,8 +23,10 @@ def main():
     vs = faiss_ollama()
     vs.add_documents(docs)
 
-    results = vs.similarity_search("God Object", k=2)
-    print(results[0].page_content)
+    ret = vs.as_retriever(search_type="mmr", search_kwargs={"k":1})
+
+    results = ret.invoke("What is God Object?")
+    print(results[0])
 
 
 if __name__ == "__main__":
