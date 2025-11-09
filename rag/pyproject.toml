@@ -8,3 +8,8 @@ dependencies = [
     "langchain-unstructured[local]>=0.1.5",
     "unstructured[md]>=0.18.18",
 ]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+
