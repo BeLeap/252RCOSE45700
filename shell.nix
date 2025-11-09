@@ -3,8 +3,10 @@
 }:
 pkgs.mkShell {
   packages = with pkgs; [
-    uv
     python314
+
+    uv
     pyright
+    ruff
   ];
 }
