@@ -1,6 +1,7 @@
 import argparse
 import glob
-from langchain_unstructured import UnstructuredLoader
+
+from ingest.load_files import load_files
 
 
 def main():
@@ -12,15 +13,7 @@ def main():
     target_files = glob.glob(args.path)
     print(f"{len(target_files)} files will be ingested!")
 
-    loader = UnstructuredLoader(
-        target_files,
-        chunking_strategy="basic",
-        max_characters=999999999,
-    )
-
-    docs = loader.load()
-
-    print(f"{len(docs)} documents to load")
+    load_files(target_files=target_files)
 
 
 if __name__ == "__main__":
