@@ -8,5 +8,7 @@ pkgs.mkShell {
     uv
     pyright
     ruff
+
+    pre-commit
   ];
 }
