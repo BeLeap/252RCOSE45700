@@ -1,6 +1,7 @@
+from langchain_core.documents import Document
 from langchain_unstructured import UnstructuredLoader
 
-def load_files(target_files: list[str]):
+def load_files(target_files: list[str]) -> list[Document]:
     loader = UnstructuredLoader(
         target_files,
         chunking_strategy="basic",
@@ -10,3 +11,5 @@ def load_files(target_files: list[str]):
     docs = loader.load()
 
     print(f"{len(docs)} documents to load")
+
+    return docs
