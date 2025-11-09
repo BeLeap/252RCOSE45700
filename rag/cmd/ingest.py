@@ -1,5 +1,6 @@
 import argparse
 import glob
+from langchain_unstructured import UnstructuredLoader
 
 def main():
     parser = argparse.ArgumentParser(prog="ingest")
@@ -9,6 +10,11 @@ def main():
 
     target_files = glob.glob(args.path)
     print(f"{len(target_files)} files will be ingested!")
+
+    loader = UnstructuredLoader(target_files)
+
+    docs = loader.load()
+    print(docs[0])
 
 if __name__ == "__main__":
     main()
