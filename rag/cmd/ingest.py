@@ -3,7 +3,7 @@ import glob
 
 from ingest.load_files import load_files
 from ingest.splitter import character
-from ingest.vector_store.faiss_ollama import faiss_ollama
+from ingest.vector_store.faiss import faiss_vs
 
 
 def main():
@@ -20,7 +20,7 @@ def main():
     character_splitter = character.CharacterSplitter()
     docs = character_splitter.split(docs)
 
-    vs = faiss_ollama()
+    vs = faiss_vs()
     vs.add_documents(docs)
 
     ret = vs.as_retriever(search_type="mmr", search_kwargs={"k":1})

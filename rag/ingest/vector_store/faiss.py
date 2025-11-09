@@ -4,9 +4,9 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_community.docstore.in_memory import InMemoryDocstore
 import faiss
 
-def faiss_ollama() -> VectorStore:
+def faiss_vs() -> VectorStore:
     embeddings = OllamaEmbeddings(
-        model="phi3:3.8b",
+        model="nomic-embed-text",
     )
     index = faiss.IndexFlatL2(len(embeddings.embed_query("hello world")))
 
