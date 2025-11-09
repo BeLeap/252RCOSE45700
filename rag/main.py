@@ -12,7 +12,8 @@ def main():
 
     if args.subcmd == "ingest":
         ingest()
-
+    else:
+        raise ValueError(f"unknown subcmd {args.subcmd}")
 
 if __name__ == "__main__":
     main()
