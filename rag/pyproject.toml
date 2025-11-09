@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "langchain-text-splitters>=0.3.11",
     "langchain-unstructured[local]>=0.1.5",
     "unstructured[md]>=0.18.18",
 ]

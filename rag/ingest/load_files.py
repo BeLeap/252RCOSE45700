@@ -10,6 +10,6 @@ def load_files(target_files: list[str]) -> list[Document]:
 
     docs = loader.load()
 
-    print(f"{len(docs)} documents to load")
+    print(f"{len(docs)} documents loaded.")
 
     return docs
