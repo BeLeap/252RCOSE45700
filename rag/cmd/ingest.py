@@ -11,7 +11,11 @@ def main():
     target_files = glob.glob(args.path)
     print(f"{len(target_files)} files will be ingested!")
 
-    loader = UnstructuredLoader(target_files, chunking_strategy="basic")
+    loader = UnstructuredLoader(
+                                target_files,
+                                chunking_strategy="basic",
+                                max_characters=999999999,
+                            )
 
     docs = loader.load()
 
