@@ -20,9 +20,18 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
+class HistoryTurn(BaseModel):
+    role: str = Field(..., description="Role of the speaker, e.g., 'user' or 'assistant'.")
+    content: str = Field(..., min_length=1, description="Message content.")
+
+
 class QueryRequest(BaseModel):
     query: str = Field(..., min_length=1, description="User query to run against the index.")
     top_k: PositiveInt = Field(5, description="Number of chunks to retrieve.")
+    history: Optional[List[HistoryTurn]] = Field(
+        default=None,
+        description="Optional prior turns to enable multi-turn context.",
+    )
 
 
 class RagConfig(BaseModel):
@@ -130,7 +139,7 @@ class RagState:
 state = RagState()
 
 
-def build_prompt(query: str, docs: Iterable[Tuple]) -> str:
+def build_prompt(query: str, docs: Iterable[Tuple], history: Optional[List[HistoryTurn]] = None) -> str:
     context_lines = []
     for idx, (doc, score) in enumerate(docs, start=1):
         citation = doc.metadata.get("source", "unknown")
@@ -141,10 +150,21 @@ def build_prompt(query: str, docs: Iterable[Tuple]) -> str:
             f"[{idx}] source={citation} page={page} chunk={chunk_id} score={score:.4f}: {preview}"
         )
     context = "\n".join(context_lines)
+    history_text = ""
+    if history:
+        formatted_turns = []
+        for turn in history:
+            role = turn.role.lower()
+            if role not in {"user", "assistant"}:
+                role = "user"
+            formatted_turns.append(f"{role}: {turn.content}")
+        history_text = "\nPrevious conversation:\n" + "\n".join(formatted_turns) + "\n"
+
     return (
         "You are a helpful assistant. Answer the user question using ONLY the provided context. "
         "Cite sources with their source and chunk id. If the answer is not in the context, say you "
-        "do not know.\n\n"
+        "do not know.\n"
+        f"{history_text}\n"
         f"Context:\n{context}\n\nQuestion: {query}"
     )
 
@@ -216,7 +236,7 @@ def query_rag(request: QueryRequest = Body(...)):
             }
         )
 
-    prompt = build_prompt(request.query, results)
+    prompt = build_prompt(request.query, results, request.history)
     try:
         llm = get_llm(state.config)
     except Exception as exc:  # pylint: disable=broad-except

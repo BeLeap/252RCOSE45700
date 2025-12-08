@@ -3,7 +3,7 @@ const topKInput = document.querySelector("#topK");
 const questionInput = document.querySelector("#question");
 const sendButton = document.querySelector("#sendButton");
 const stopButton = document.querySelector("#stopButton");
-const answerEl = document.querySelector("#answer");
+const transcriptEl = document.querySelector("#transcript");
 const citationsEl = document.querySelector("#citations");
 const statusBadge = document.querySelector("#statusBadge");
 const timerEl = document.querySelector("#timer");
@@ -12,6 +12,8 @@ const healthButton = document.querySelector("#healthButton");
 let controller = null;
 let startTime = null;
 let timerHandle = null;
+let messages = [];
+let pendingAssistantIndex = null;
 
 function setStatus(text, variant = "warn") {
   statusBadge.textContent = text;
@@ -39,8 +41,20 @@ function updateTimer() {
 }
 
 function clearResponse() {
-  answerEl.textContent = "";
   citationsEl.innerHTML = "";
+}
+
+function renderTranscript() {
+  transcriptEl.innerHTML = "";
+  messages.forEach((msg) => {
+    const div = document.createElement("div");
+    div.className = `message ${msg.role}`;
+    div.innerHTML = `
+      <div class="role">${msg.role}</div>
+      <div class="content">${msg.content}</div>
+    `;
+    transcriptEl.appendChild(div);
+  });
 }
 
 function renderCitations(citations) {
@@ -94,6 +108,11 @@ async function sendQuery() {
   const query = questionInput.value.trim();
   if (!serverUrl || !query) return;
 
+  const historySnapshot = [...messages];
+  messages.push({ role: "user", content: query });
+  pendingAssistantIndex = messages.push({ role: "assistant", content: "" }) - 1;
+  renderTranscript();
+
   controller = new AbortController();
   sendButton.disabled = true;
   setStatus("Streaming...", "ok");
@@ -104,7 +123,7 @@ async function sendQuery() {
     const response = await fetch(`${serverUrl}/query`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, top_k: topK }),
+      body: JSON.stringify({ query, top_k: topK, history: historySnapshot }),
       signal: controller.signal,
     });
 
@@ -124,7 +143,10 @@ async function sendQuery() {
         if (event === "citations") {
           renderCitations(payload.citations || []);
         } else if (event === "token") {
-          answerEl.textContent += payload.token ?? "";
+          if (pendingAssistantIndex != null) {
+            messages[pendingAssistantIndex].content += payload.token ?? "";
+            renderTranscript();
+          }
         } else if (event === "done") {
           setStatus("Done", "ok");
         }
@@ -135,12 +157,16 @@ async function sendQuery() {
       setStatus("Stopped", "warn");
     } else {
       setStatus("Error", "error");
-      answerEl.textContent = `Error: ${err.message}`;
+      if (pendingAssistantIndex != null) {
+        messages[pendingAssistantIndex].content = `Error: ${err.message}`;
+        renderTranscript();
+      }
     }
   } finally {
     sendButton.disabled = false;
     stopTimer();
     controller = null;
+    pendingAssistantIndex = null;
   }
 }
 

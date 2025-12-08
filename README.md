@@ -52,3 +52,5 @@ python -m http.server 3000
 ```
 
 Then open `http://localhost:3000`. Configure the RAG server URL, choose `top_k`, and send a question. The UI displays streamed tokens and the citations from the first SSE event. `Check health` pings `/health` to confirm the index is loaded.
+
+Multi-turn: the UI keeps the transcript locally and sends previous turns as `history` on each query so the server can include conversational context in the prompt.
