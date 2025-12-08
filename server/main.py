@@ -168,16 +168,21 @@ def format_sse(event: str, data: Dict) -> str:
 
 def stream_response(llm, prompt: str, citations: List[Dict]):
     def event_generator():
+        logger.info("Streaming response with %d citations", len(citations))
         yield format_sse("citations", {"citations": citations})
-        messages = [
-            SystemMessage(
-                content="You are a helpful assistant. Answer using only the provided context and cite sources."
-            ),
-            HumanMessage(content=prompt),
-        ]
-        for chunk in llm.stream(messages):
-            if chunk.content:
-                yield format_sse("token", {"token": chunk.content})
+        try:
+            messages = [
+                SystemMessage(
+                    content="You are a helpful assistant. Answer using only the provided context and cite sources."
+                ),
+                HumanMessage(content=prompt),
+            ]
+            for chunk in llm.stream(messages):
+                if chunk.content:
+                    yield format_sse("token", {"token": chunk.content})
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.exception("LLM streaming failed: %s", exc)
+            yield format_sse("error", {"error": str(exc)})
         yield format_sse("done", {"status": "ok"})
 
     return event_generator()
@@ -220,6 +225,7 @@ def query_rag(request: QueryRequest = Body(...)):
         raise HTTPException(status_code=503, detail="Index not loaded.")
 
     k = request.top_k or state.config.default_top_k
+    logger.info("Received query: %s (top_k=%s, history=%s)", request.query, k, bool(request.history))
     results = state.store.similarity_search_with_score(request.query, k=k)
     citations = []
     for doc, score in results:
@@ -236,6 +242,12 @@ def query_rag(request: QueryRequest = Body(...)):
         )
 
     prompt = build_prompt(request.query, results, request.history)
+    logger.info(
+        "Built prompt length=%d, citations=%d, first_citation=%s",
+        len(prompt),
+        len(citations),
+        citations[0]["source"] if citations else None,
+    )
     try:
         llm = get_llm(state.config)
     except Exception as exc:  # pylint: disable=broad-except
