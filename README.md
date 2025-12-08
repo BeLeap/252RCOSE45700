@@ -1,21 +1,17 @@
 # COSE457
 
-## Ingest
-
 Prepare a Python environment (e.g., `python -m venv .venv && source .venv/bin/activate`) and install dependencies:
 
 ```
 pip install -r requirements.txt
 ```
 
+## Ingest
+
 By default ingestion uses Ollama embeddings (`nomic-embed-text:latest`). Ensure Ollama is running locally (or set `OLLAMA_BASE_URL`) and then build the FAISS index (defaults download the provided S3 PDFs):
 
 ```
 python scripts/ingest.py \
-  --sources https://korea-sw-26-s3.s3.us-east-1.amazonaws.com/2019-Shareholder-Letter.pdf \
-           https://korea-sw-26-s3.s3.us-east-1.amazonaws.com/2020-Shareholder-Letter.pdf \
-           https://korea-sw-26-s3.s3.us-east-1.amazonaws.com/2021-Shareholder-Letter.pdf \
-           https://korea-sw-26-s3.s3.us-east-1.amazonaws.com/2022-Shareholder-Letter.pdf \
   --verify-query "What was emphasized about cash flow?"
 ```
 
@@ -54,3 +50,7 @@ python -m http.server 3000
 Then open `http://localhost:3000`. Configure the RAG server URL, choose `top_k`, and send a question. The UI displays streamed tokens and the citations from the first SSE event. `Check health` pings `/health` to confirm the index is loaded.
 
 Multi-turn: the UI keeps the transcript locally and sends previous turns as `history` on each query so the server can include conversational context in the prompt.
+
+## Ollama Demonstration
+
+[demonstration](https://gist.github.com/user-attachments/assets/f97ec6ec-ae5c-48a6-981a-c51edfad94c8)
