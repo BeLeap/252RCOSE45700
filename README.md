@@ -8,21 +8,21 @@ pip install -r requirements.txt
 
 ## Ingest
 
-By default ingestion uses Ollama embeddings (`nomic-embed-text:latest`). Ensure Ollama is running locally (or set `OLLAMA_BASE_URL`) and then build the FAISS index (defaults download the provided S3 PDFs):
+By default ingestion uses Google embeddings (`gemini-embedding-001`). Set `GOOGLE_API_KEY` and then build the FAISS index (defaults download the provided S3 PDFs):
 
 ```
 python scripts/ingest.py \
   --verify-query "What was emphasized about cash flow?"
 ```
 
-To use Gemini embeddings instead, provide `--embedding-backend google --embedding-model gemini-embedding-001` and set `GOOGLE_API_KEY`.
+To use Ollama embeddings instead, pass `--embedding-backend ollama --embedding-model nomic-embed-text:latest` (requires Ollama running locally or `OLLAMA_BASE_URL`).
 Note: the Google API expects model ids prefixed with `models/`; the script will normalize common names (e.g., `gemini-embedding-001` → `models/embedding-001`, `text-embedding-004` → `models/text-embedding-004`).
 
 Artifacts are written to `data/faiss_store/`, `data/faiss.index`, and `data/faiss-meta.json`. Customize chunking with `--chunk-size`/`--chunk-overlap` or point `--sources` to local files or directories.
 
 ## Server
 
-Start the FastAPI RAG server (expects the FAISS artifacts above). By default it uses Ollama embeddings (`RAG_EMBEDDING_BACKEND=ollama`, `RAG_EMBEDDING_MODEL=nomic-embed-text:latest`) and Ollama `phi3:3.8b` for generation (`RAG_LLM_BACKEND=ollama`, `RAG_LLM_MODEL=phi3:3.8b`). Ensure Ollama is running and the model is available locally (`ollama pull phi3:3.8b`):
+Start the FastAPI RAG server (expects the FAISS artifacts above). By default it uses Google embeddings (`RAG_EMBEDDING_BACKEND=google`, `RAG_EMBEDDING_MODEL=gemini-embedding-001`) and Gemini for generation (`RAG_LLM_BACKEND=google`, `RAG_LLM_MODEL=gemini-3-pro-preview`, requires `GOOGLE_API_KEY`):
 
 ```
 uvicorn server.main:app --reload --port 8000
@@ -35,7 +35,7 @@ Key endpoints:
 
 Configurable via env vars: `RAG_EMBEDDING_BACKEND`, `RAG_EMBEDDING_MODEL`, `RAG_LLM_BACKEND`, `RAG_LLM_MODEL`, `RAG_INDEX_DIR`, `RAG_INDEX_PATH`, `RAG_METADATA_PATH`, `RAG_TOP_K`, `GOOGLE_API_KEY`, `OLLAMA_BASE_URL`.
 
-To switch generation to Gemini instead of Ollama: set `RAG_LLM_BACKEND=google`, `RAG_LLM_MODEL=gemini-3-pro-preview`, and provide `GOOGLE_API_KEY`.
+To switch generation to Ollama instead: set `RAG_LLM_BACKEND=ollama`, `RAG_LLM_MODEL=phi3:3.8b`, and ensure Ollama is running (`ollama pull phi3:3.8b`).
 
 ## Client (Web UI)
 

@@ -60,13 +60,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--embedding-backend",
         choices=["ollama", "google"],
-        default="ollama",
-        help="Embedding provider backend. Defaults to ollama for local runs.",
+        default="google",
+        help="Embedding provider backend. Defaults to google.",
     )
     parser.add_argument(
         "--embedding-model",
-        default="nomic-embed-text:latest",
-        help="Embedding model id (backend-specific). Defaults to nomic-embed-text:latest for Ollama.",
+        default="gemini-embedding-001",
+        help="Embedding model id (backend-specific). Defaults to gemini-embedding-001 for Google.",
     )
     parser.add_argument(
         "--chunk-size",

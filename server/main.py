@@ -35,10 +35,10 @@ class QueryRequest(BaseModel):
 
 
 class RagConfig(BaseModel):
-    embedding_backend: str = Field(default=os.getenv("RAG_EMBEDDING_BACKEND", "ollama"))
-    embedding_model: str = Field(default=os.getenv("RAG_EMBEDDING_MODEL", "nomic-embed-text:latest"))
-    llm_backend: str = Field(default=os.getenv("RAG_LLM_BACKEND", "ollama"))
-    llm_model: str = Field(default=os.getenv("RAG_LLM_MODEL", "phi3:3.8b"))
+    embedding_backend: str = Field(default=os.getenv("RAG_EMBEDDING_BACKEND", "google"))
+    embedding_model: str = Field(default=os.getenv("RAG_EMBEDDING_MODEL", "gemini-embedding-001"))
+    llm_backend: str = Field(default=os.getenv("RAG_LLM_BACKEND", "google"))
+    llm_model: str = Field(default=os.getenv("RAG_LLM_MODEL", "gemini-3-pro-preview"))
     index_dir: Path = Field(default=Path(os.getenv("RAG_INDEX_DIR", "data/faiss_store")))
     index_path: Path = Field(default=Path(os.getenv("RAG_INDEX_PATH", "data/faiss.index")))
     metadata_path: Path = Field(default=Path(os.getenv("RAG_METADATA_PATH", "data/faiss-meta.json")))
