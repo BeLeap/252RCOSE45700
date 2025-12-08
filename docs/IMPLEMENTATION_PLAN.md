@@ -7,14 +7,14 @@
 - [ ] 데이터 소스 로딩: S3 버킷(`korea-sw-26-s3`)에 올려둔 PDF(예: 연차 서한) 다운받아 로컬 경로(`./documents` 등)로 정리하거나 원격 URL을 직접 읽도록 지원
 - [ ] 전처리: 인코딩 통일, 불필요한 공백/마크다운 제거 규칙, 파일별 title/경로/페이지 등 메타데이터 구조 정의
 - [ ] 청킹 전략: 토큰/문자 기반 chunk size와 overlap 결정, 청크별로 `source`, `chunk_id`, `start_line` 등 메타데이터 부여
-- [ ] 임베딩 프로바이더 스위치: 개발용 `ollama:nomic-embed-text`, 운영용 `gemini-embedding-001`을 환경 변수로 선택(`EMBEDDING_PROVIDER`, `AI_API_KEY`, `OLLAMA_HOST`)
+- [ ] 임베딩/LLM 모델 설정: 임베딩은 `gemini-embedding-001`, 생성은 `gemini-3-pro-preview`를 기본값으로 함
 - [ ] 벡터스토어 생성: FAISS 인덱스와 메타데이터 매핑을 `./data/faiss.index`, `./data/faiss-meta.json` 등 경로로 저장
-- [ ] CLI/스크립트화: `aws s3 sync s3://korea-sw-26-s3 ./documents && python scripts/ingest.py --source ./documents --model ollama/nomic-embed-text --index-path ./data/faiss.index`처럼 S3 동기화 포함 실행 방법 제공
+- [ ] CLI/스크립트화: `aws s3 sync s3://korea-sw-26-s3 ./documents && python scripts/ingest.py --source ./documents --model gemini-embedding-001 --index-path ./data/faiss.index`처럼 S3 동기화 포함 실행 방법 제공
 - [ ] 검증: 샘플 질의로 top-k 검색 결과와 메타데이터를 출력해 인덱스 유효성 확인하는 간단한 테스트 추가
 
 ## server: RAG API (prompt 수신 + 검색 + LLM 호출)
 
-- [ ] 환경 설정: `AI_API_KEY`, 임베딩/LLM 모델 선택, `INDEX_PATH`, `TOP_K` 기본값을 설정 파일이나 env로 관리
+- [ ] 환경 설정: 임베딩/LLM 모델 기본값(`gemini-embedding-001`, `gemini-3-pro-preview`), `INDEX_PATH`, `TOP_K`를 설정 파일이나 env로 관리
 - [ ] 인덱스 로드: 부팅 시 FAISS 인덱스와 메타데이터 로딩 및 헬스체크/리로드 엔드포인트(`/health`, `/reload`) 제공
 - [ ] RAG 파이프라인: 질의 임베딩 → FAISS 검색 → 상위 k개 컨텍스트 정렬/필터링 → 프롬프트 템플릿에 삽입 → LLM 호출
 - [ ] 출처 표기: 응답에 사용된 청크의 `source`와 `chunk_id`/페이지 등을 함께 반환하고, 클라이언트가 표시할 수 있도록 구조화
