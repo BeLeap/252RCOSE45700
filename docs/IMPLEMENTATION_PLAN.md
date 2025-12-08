@@ -4,12 +4,12 @@
 
 ## ingest: FAISS 인덱스 생성
 
-- [ ] 데이터 소스 로딩: `./documents` 폴더 재귀 탐색(예: md, txt, pdf 등 지원 목록 명시) 후 본문/메타데이터 추출
+- [ ] 데이터 소스 로딩: S3 버킷(`korea-sw-26-s3`)에 올려둔 PDF(예: 연차 서한) 다운받아 로컬 경로(`./documents` 등)로 정리하거나 원격 URL을 직접 읽도록 지원
 - [ ] 전처리: 인코딩 통일, 불필요한 공백/마크다운 제거 규칙, 파일별 title/경로/페이지 등 메타데이터 구조 정의
 - [ ] 청킹 전략: 토큰/문자 기반 chunk size와 overlap 결정, 청크별로 `source`, `chunk_id`, `start_line` 등 메타데이터 부여
 - [ ] 임베딩 프로바이더 스위치: 개발용 `ollama:nomic-embed-text`, 운영용 `gemini-embedding-001`을 환경 변수로 선택(`EMBEDDING_PROVIDER`, `AI_API_KEY`, `OLLAMA_HOST`)
 - [ ] 벡터스토어 생성: FAISS 인덱스와 메타데이터 매핑을 `./data/faiss.index`, `./data/faiss-meta.json` 등 경로로 저장
-- [ ] CLI/스크립트화: `python scripts/ingest.py --source ./documents --model ollama/nomic-embed-text --index-path ./data/faiss.index` 같은 실행 방법 제공
+- [ ] CLI/스크립트화: `aws s3 sync s3://korea-sw-26-s3 ./documents && python scripts/ingest.py --source ./documents --model ollama/nomic-embed-text --index-path ./data/faiss.index`처럼 S3 동기화 포함 실행 방법 제공
 - [ ] 검증: 샘플 질의로 top-k 검색 결과와 메타데이터를 출력해 인덱스 유효성 확인하는 간단한 테스트 추가
 
 ## server: RAG API (prompt 수신 + 검색 + LLM 호출)
