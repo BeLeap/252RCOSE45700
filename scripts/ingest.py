@@ -13,6 +13,7 @@ import faiss
 import requests
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_community.vectorstores import FAISS
+from langchain_ollama import OllamaEmbeddings
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -57,9 +58,15 @@ def parse_args() -> argparse.Namespace:
         help="Path to write chunk metadata for downstream use.",
     )
     parser.add_argument(
+        "--embedding-backend",
+        choices=["ollama", "google"],
+        default="ollama",
+        help="Embedding provider backend. Defaults to ollama for local runs.",
+    )
+    parser.add_argument(
         "--embedding-model",
-        default="gemini-embedding-001",
-        help="Embedding model id for Google Generative AI.",
+        default="nomic-embed-text:latest",
+        help="Embedding model id (backend-specific). Defaults to nomic-embed-text:latest for Ollama.",
     )
     parser.add_argument(
         "--chunk-size",
@@ -167,11 +174,19 @@ def chunk_documents(documents: List, chunk_size: int, chunk_overlap: int) -> Lis
     return chunks
 
 
-def build_embeddings(model: str) -> GoogleGenerativeAIEmbeddings:
-    api_key = os.getenv("GOOGLE_API_KEY")
-    if not api_key:
-        raise IngestError("GOOGLE_API_KEY is not set.")
-    return GoogleGenerativeAIEmbeddings(model=model, google_api_key=api_key)
+def build_embeddings(backend: str, model: str):
+    if backend == "google":
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise IngestError("GOOGLE_API_KEY is not set.")
+        return GoogleGenerativeAIEmbeddings(model=model, google_api_key=api_key)
+
+    if backend == "ollama":
+        base_url = os.getenv("OLLAMA_BASE_URL")
+        # base_url can be None to use default localhost
+        return OllamaEmbeddings(model=model, base_url=base_url)
+
+    raise IngestError(f"Unsupported embedding backend: {backend}")
 
 
 def persist_index(
@@ -231,7 +246,7 @@ def main() -> int:
             raise IngestError("No documents were loaded.")
 
         chunks = chunk_documents(documents, args.chunk_size, args.chunk_overlap)
-        embeddings = build_embeddings(args.embedding_model)
+        embeddings = build_embeddings(args.embedding_backend, args.embedding_model)
         vector_store = FAISS.from_documents(chunks, embeddings)
         persist_index(
             vector_store,
