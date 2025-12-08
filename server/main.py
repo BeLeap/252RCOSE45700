@@ -35,7 +35,7 @@ class QueryRequest(BaseModel):
 
 class RagConfig(BaseModel):
     embedding_model: str = Field(default=os.getenv("RAG_EMBEDDING_MODEL", "gemini-embedding-001"))
-    llm_model: str = Field(default=os.getenv("RAG_LLM_MODEL", "gemini-3-pro-preview"))
+    llm_model: str = Field(default=os.getenv("RAG_LLM_MODEL", "gemini-2.5-flash-lite"))
     index_dir: Path = Field(default=Path(os.getenv("RAG_INDEX_DIR", "data/faiss_store")))
     index_path: Path = Field(default=Path(os.getenv("RAG_INDEX_PATH", "data/faiss.index")))
     metadata_path: Path = Field(default=Path(os.getenv("RAG_METADATA_PATH", "data/faiss-meta.json")))
