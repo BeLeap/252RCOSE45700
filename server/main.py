@@ -13,7 +13,7 @@ from fastapi.responses import StreamingResponse
 from langchain.schema import SystemMessage
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_ollama import OllamaEmbeddings
+from langchain_ollama import ChatOllama, OllamaEmbeddings
 from pydantic import BaseModel, Field, PositiveInt
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,8 @@ class QueryRequest(BaseModel):
 class RagConfig(BaseModel):
     embedding_backend: str = Field(default=os.getenv("RAG_EMBEDDING_BACKEND", "ollama"))
     embedding_model: str = Field(default=os.getenv("RAG_EMBEDDING_MODEL", "nomic-embed-text:latest"))
-    llm_model: str = Field(default=os.getenv("RAG_LLM_MODEL", "gemini-3-pro-preview"))
+    llm_backend: str = Field(default=os.getenv("RAG_LLM_BACKEND", "ollama"))
+    llm_model: str = Field(default=os.getenv("RAG_LLM_MODEL", "phi3:3.8b"))
     index_dir: Path = Field(default=Path(os.getenv("RAG_INDEX_DIR", "data/faiss_store")))
     index_path: Path = Field(default=Path(os.getenv("RAG_INDEX_PATH", "data/faiss.index")))
     metadata_path: Path = Field(default=Path(os.getenv("RAG_METADATA_PATH", "data/faiss-meta.json")))
@@ -70,15 +71,26 @@ def get_embeddings(config: RagConfig):
 
 
 def get_llm(config: RagConfig):
-    api_key = os.getenv("GOOGLE_API_KEY")
-    if not api_key:
-        raise RuntimeError("GOOGLE_API_KEY is required for LLM.")
-    return ChatGoogleGenerativeAI(
-        model=config.llm_model,
-        google_api_key=api_key,
-        streaming=True,
-        temperature=0,
-    )
+    if config.llm_backend == "google":
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise RuntimeError("GOOGLE_API_KEY is required for google LLM backend.")
+        return ChatGoogleGenerativeAI(
+            model=config.llm_model,
+            google_api_key=api_key,
+            streaming=True,
+            temperature=0,
+        )
+
+    if config.llm_backend == "ollama":
+        base_url = os.getenv("OLLAMA_BASE_URL")
+        return ChatOllama(
+            model=config.llm_model,
+            base_url=base_url,
+            temperature=0,
+        )
+
+    raise RuntimeError(f"Unsupported LLM backend: {config.llm_backend}")
 
 
 def load_faiss_store(config: RagConfig, embeddings) -> FAISS:

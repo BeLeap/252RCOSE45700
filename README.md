@@ -25,7 +25,7 @@ Artifacts are written to `data/faiss_store/`, `data/faiss.index`, and `data/fais
 
 ## Server
 
-Start the FastAPI RAG server (expects the FAISS artifacts above). By default it uses Ollama embeddings (`RAG_EMBEDDING_BACKEND=ollama`, `RAG_EMBEDDING_MODEL=nomic-embed-text:latest`) and Gemini for generation (`RAG_LLM_MODEL=gemini-3-pro-preview`, requires `GOOGLE_API_KEY`):
+Start the FastAPI RAG server (expects the FAISS artifacts above). By default it uses Ollama embeddings (`RAG_EMBEDDING_BACKEND=ollama`, `RAG_EMBEDDING_MODEL=nomic-embed-text:latest`) and Ollama `phi3:3.8b` for generation (`RAG_LLM_BACKEND=ollama`, `RAG_LLM_MODEL=phi3:3.8b`). Ensure Ollama is running and the model is available locally (`ollama pull phi3:3.8b`):
 
 ```
 uvicorn server.main:app --reload --port 8000
@@ -36,4 +36,6 @@ Key endpoints:
 - `POST /reload` — reload FAISS store and metadata from disk.
 - `POST /query` — body `{ "query": "...", "top_k": 5 }`, responds with `text/event-stream` streaming tokens and a first `citations` event containing source metadata.
 
-Configurable via env vars: `RAG_EMBEDDING_BACKEND`, `RAG_EMBEDDING_MODEL`, `RAG_LLM_MODEL`, `RAG_INDEX_DIR`, `RAG_INDEX_PATH`, `RAG_METADATA_PATH`, `RAG_TOP_K`, `GOOGLE_API_KEY`, `OLLAMA_BASE_URL`.
+Configurable via env vars: `RAG_EMBEDDING_BACKEND`, `RAG_EMBEDDING_MODEL`, `RAG_LLM_BACKEND`, `RAG_LLM_MODEL`, `RAG_INDEX_DIR`, `RAG_INDEX_PATH`, `RAG_METADATA_PATH`, `RAG_TOP_K`, `GOOGLE_API_KEY`, `OLLAMA_BASE_URL`.
+
+To switch generation to Gemini instead of Ollama: set `RAG_LLM_BACKEND=google`, `RAG_LLM_MODEL=gemini-3-pro-preview`, and provide `GOOGLE_API_KEY`.
