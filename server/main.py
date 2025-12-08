@@ -10,7 +10,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from langchain.schema import SystemMessage
+from langchain.schema import HumanMessage, SystemMessage
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_ollama import ChatOllama, OllamaEmbeddings
@@ -190,7 +190,13 @@ def format_sse(event: str, data: Dict) -> str:
 def stream_response(llm, prompt: str, citations: List[Dict]):
     def event_generator():
         yield format_sse("citations", {"citations": citations})
-        for chunk in llm.stream([SystemMessage(content=prompt)]):
+        messages = [
+            SystemMessage(
+                content="You are a helpful assistant. Answer using only the provided context and cite sources."
+            ),
+            HumanMessage(content=prompt),
+        ]
+        for chunk in llm.stream(messages):
             if chunk.content:
                 yield format_sse("token", {"token": chunk.content})
         yield format_sse("done", {"status": "ok"})
