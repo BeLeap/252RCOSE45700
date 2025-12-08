@@ -16,6 +16,7 @@ python scripts/ingest.py \
 ```
 
 To use Gemini embeddings instead, provide `--embedding-backend google --embedding-model gemini-embedding-001` and set `GOOGLE_API_KEY`.
+Note: the Google API expects model ids prefixed with `models/`; the script will normalize common names (e.g., `gemini-embedding-001` → `models/embedding-001`, `text-embedding-004` → `models/text-embedding-004`).
 
 Artifacts are written to `data/faiss_store/`, `data/faiss.index`, and `data/faiss-meta.json`. Customize chunking with `--chunk-size`/`--chunk-overlap` or point `--sources` to local files or directories.
 

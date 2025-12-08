@@ -179,7 +179,8 @@ def build_embeddings(backend: str, model: str):
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise IngestError("GOOGLE_API_KEY is not set.")
-        return GoogleGenerativeAIEmbeddings(model=model, google_api_key=api_key)
+        normalized_model = normalize_google_model(model)
+        return GoogleGenerativeAIEmbeddings(model=normalized_model, google_api_key=api_key)
 
     if backend == "ollama":
         base_url = os.getenv("OLLAMA_BASE_URL")
@@ -187,6 +188,19 @@ def build_embeddings(backend: str, model: str):
         return OllamaEmbeddings(model=model, base_url=base_url)
 
     raise IngestError(f"Unsupported embedding backend: {backend}")
+
+
+def normalize_google_model(model: str) -> str:
+    legacy_map = {
+        "gemini-embedding-001": "models/embedding-001",
+        "embedding-001": "models/embedding-001",
+        "text-embedding-004": "models/text-embedding-004",
+    }
+    if model in legacy_map:
+        return legacy_map[model]
+    if model.startswith("models/"):
+        return model
+    return f"models/{model}"
 
 
 def persist_index(
