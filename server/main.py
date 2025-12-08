@@ -10,10 +10,9 @@ from typing import Dict, Iterable, List, Optional, Tuple
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from langchain.schema import SystemMessage
+from langchain.schema import HumanMessage, SystemMessage
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_ollama import ChatOllama, OllamaEmbeddings
 from pydantic import BaseModel, Field, PositiveInt
 
 logger = logging.getLogger(__name__)
@@ -35,9 +34,7 @@ class QueryRequest(BaseModel):
 
 
 class RagConfig(BaseModel):
-    embedding_backend: str = Field(default=os.getenv("RAG_EMBEDDING_BACKEND", "google"))
     embedding_model: str = Field(default=os.getenv("RAG_EMBEDDING_MODEL", "gemini-embedding-001"))
-    llm_backend: str = Field(default=os.getenv("RAG_LLM_BACKEND", "google"))
     llm_model: str = Field(default=os.getenv("RAG_LLM_MODEL", "gemini-3-pro-preview"))
     index_dir: Path = Field(default=Path(os.getenv("RAG_INDEX_DIR", "data/faiss_store")))
     index_path: Path = Field(default=Path(os.getenv("RAG_INDEX_PATH", "data/faiss.index")))
@@ -66,41 +63,23 @@ def load_metadata(path: Path) -> List[Dict]:
 
 
 def get_embeddings(config: RagConfig):
-    if config.embedding_backend == "google":
-        api_key = os.getenv("GOOGLE_API_KEY")
-        if not api_key:
-            raise RuntimeError("GOOGLE_API_KEY is required for google embeddings.")
-        model_name = normalize_google_model(config.embedding_model)
-        return GoogleGenerativeAIEmbeddings(model=model_name, google_api_key=api_key)
-
-    if config.embedding_backend == "ollama":
-        base_url = os.getenv("OLLAMA_BASE_URL")
-        return OllamaEmbeddings(model=config.embedding_model, base_url=base_url)
-
-    raise RuntimeError(f"Unsupported embedding backend: {config.embedding_backend}")
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GOOGLE_API_KEY is required for embeddings.")
+    model_name = normalize_google_model(config.embedding_model)
+    return GoogleGenerativeAIEmbeddings(model=model_name, google_api_key=api_key)
 
 
 def get_llm(config: RagConfig):
-    if config.llm_backend == "google":
-        api_key = os.getenv("GOOGLE_API_KEY")
-        if not api_key:
-            raise RuntimeError("GOOGLE_API_KEY is required for google LLM backend.")
-        return ChatGoogleGenerativeAI(
-            model=config.llm_model,
-            google_api_key=api_key,
-            streaming=True,
-            temperature=0,
-        )
-
-    if config.llm_backend == "ollama":
-        base_url = os.getenv("OLLAMA_BASE_URL")
-        return ChatOllama(
-            model=config.llm_model,
-            base_url=base_url,
-            temperature=0,
-        )
-
-    raise RuntimeError(f"Unsupported LLM backend: {config.llm_backend}")
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GOOGLE_API_KEY is required for LLM.")
+    return ChatGoogleGenerativeAI(
+        model=config.llm_model,
+        google_api_key=api_key,
+        streaming=True,
+        temperature=0,
+    )
 
 
 def normalize_google_model(model: str) -> str:
@@ -190,7 +169,13 @@ def format_sse(event: str, data: Dict) -> str:
 def stream_response(llm, prompt: str, citations: List[Dict]):
     def event_generator():
         yield format_sse("citations", {"citations": citations})
-        for chunk in llm.stream([SystemMessage(content=prompt)]):
+        messages = [
+            SystemMessage(
+                content="You are a helpful assistant. Answer using only the provided context and cite sources."
+            ),
+            HumanMessage(content=prompt),
+        ]
+        for chunk in llm.stream(messages):
             if chunk.content:
                 yield format_sse("token", {"token": chunk.content})
         yield format_sse("done", {"status": "ok"})
