@@ -1,4 +1,6 @@
 faiss-cpu
+fastapi
+google-generativeai
 langchain-community
 langchain-google-genai
 langchain-ollama
@@ -7,3 +9,4 @@ pypdf
 python-dotenv
 requests
 tqdm
+uvicorn
