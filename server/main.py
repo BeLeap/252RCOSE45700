@@ -70,7 +70,8 @@ def get_embeddings(config: RagConfig):
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise RuntimeError("GOOGLE_API_KEY is required for google embeddings.")
-        return GoogleGenerativeAIEmbeddings(model=config.embedding_model, google_api_key=api_key)
+        model_name = normalize_google_model(config.embedding_model)
+        return GoogleGenerativeAIEmbeddings(model=model_name, google_api_key=api_key)
 
     if config.embedding_backend == "ollama":
         base_url = os.getenv("OLLAMA_BASE_URL")
@@ -100,6 +101,19 @@ def get_llm(config: RagConfig):
         )
 
     raise RuntimeError(f"Unsupported LLM backend: {config.llm_backend}")
+
+
+def normalize_google_model(model: str) -> str:
+    legacy_map = {
+        "gemini-embedding-001": "models/embedding-001",
+        "embedding-001": "models/embedding-001",
+        "text-embedding-004": "models/text-embedding-004",
+    }
+    if model in legacy_map:
+        return legacy_map[model]
+    if model.startswith("models/"):
+        return model
+    return f"models/{model}"
 
 
 def load_faiss_store(config: RagConfig, embeddings) -> FAISS:
