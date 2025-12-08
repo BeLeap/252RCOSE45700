@@ -204,13 +204,14 @@ def query_rag(request: QueryRequest = Body(...)):
     results = state.store.similarity_search_with_score(request.query, k=k)
     citations = []
     for doc, score in results:
+        safe_score = float(score) if score is not None else None
         citations.append(
             {
                 "source": doc.metadata.get("source"),
                 "chunk_id": doc.metadata.get("chunk_id"),
                 "page": doc.metadata.get("page"),
                 "path": doc.metadata.get("path"),
-                "score": score,
+                "score": safe_score,
                 "preview": doc.page_content[:200].replace("\n", " "),
             }
         )
