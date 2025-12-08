@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RAG Chat Client</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div>
+        <p class="eyebrow">COSE457 RAG</p>
+        <h1>Ask the corpus</h1>
+        <p class="lede">
+          Streams answers from the RAG server with inline citations. Configure the server URL and top-k
+          retrieval size, then send your question.
+        </p>
+      </div>
+      <div class="controls">
+        <label class="control">
+          <span>Server URL</span>
+          <input id="serverUrl" type="text" value="http://localhost:8000" />
+        </label>
+        <label class="control">
+          <span>Top K</span>
+          <input id="topK" type="number" value="5" min="1" max="20" />
+        </label>
+        <button id="healthButton" class="ghost">Check health</button>
+        <span id="statusBadge" class="badge badge-warn">Idle</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <label for="question" class="control full">
+          <span>Your question</span>
+          <textarea id="question" rows="4" placeholder="What was emphasized about cash flow?"></textarea>
+        </label>
+        <div class="actions">
+          <button id="sendButton">Send</button>
+          <button id="stopButton" class="ghost">Stop</button>
+        </div>
+      </section>
+
+      <section class="panel response">
+        <div class="response-header">
+          <div class="pill">Response</div>
+          <div id="timer" class="muted">0.0s</div>
+        </div>
+        <div id="answer" class="answer"></div>
+        <div id="citations" class="citations"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p class="muted">
+        Powered by FAISS, Ollama/Gemini backends. Streaming via text/event-stream from <code>/query</code>.
+      </p>
+    </footer>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

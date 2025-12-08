@@ -39,3 +39,16 @@ Key endpoints:
 Configurable via env vars: `RAG_EMBEDDING_BACKEND`, `RAG_EMBEDDING_MODEL`, `RAG_LLM_BACKEND`, `RAG_LLM_MODEL`, `RAG_INDEX_DIR`, `RAG_INDEX_PATH`, `RAG_METADATA_PATH`, `RAG_TOP_K`, `GOOGLE_API_KEY`, `OLLAMA_BASE_URL`.
 
 To switch generation to Gemini instead of Ollama: set `RAG_LLM_BACKEND=google`, `RAG_LLM_MODEL=gemini-3-pro-preview`, and provide `GOOGLE_API_KEY`.
+
+## Client (Web UI)
+
+A minimal web UI lives in `client/` and streams responses over `text/event-stream` from `POST /query`.
+
+Start a simple static server (example using Python):
+
+```
+cd client
+python -m http.server 3000
+```
+
+Then open `http://localhost:3000`. Configure the RAG server URL, choose `top_k`, and send a question. The UI displays streamed tokens and the citations from the first SSE event. `Check health` pings `/health` to confirm the index is loaded.
