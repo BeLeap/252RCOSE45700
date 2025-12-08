@@ -49,6 +49,6 @@ Then open `http://localhost:3000`. Configure the RAG server URL, choose `top_k`,
 
 Multi-turn: the UI keeps the transcript locally and sends previous turns as `history` on each query so the server can include conversational context in the prompt.
 
-## Ollama Demonstration
+## Demonstration
 
-[demonstration](https://gist.github.com/user-attachments/assets/f97ec6ec-ae5c-48a6-981a-c51edfad94c8)
+[demonstration](https://gist.github.com/user-attachments/assets/90c885d4-02b4-4814-9abc-c930541c1eb5)
