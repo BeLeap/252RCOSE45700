@@ -38,6 +38,8 @@
           fonts = with pkgs; [
             nanum-myeongjo
           ];
+
+          typstEnv = p: [ p.polylux ];
         };
         devShells.default = pkgs.mkShell {
           inputsFrom = [ packages.default ];
