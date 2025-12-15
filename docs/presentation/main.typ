@@ -5,6 +5,7 @@
 
 = COSE457 RAG 챗봇
 LangChain · FAISS · Gemini (embedding / generation)
+#link("https://github.com/BeLeap/252RCOSE45700")[BeLeap/252RCOSE45700]
 
 #pagebreak()
 
